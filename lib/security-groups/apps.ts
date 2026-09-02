@@ -14,7 +14,7 @@ export interface SecurityGroupApplication {
 }
 
 export function buildSecurityGroupProblemApp(
-  env: Environment,
+  env?: Environment,
 ): SecurityGroupApplication {
   const app = new App();
   const network = new NetworkStack(app, 'Problem-Network', { env });
@@ -43,7 +43,7 @@ export function buildSecurityGroupProblemApp(
 }
 
 export function buildSecurityGroupSolutionApp(
-  env: Environment,
+  env?: Environment,
 ): SecurityGroupApplication {
   const app = new App();
   const network = new NetworkStack(app, 'Solution-Network', { env });
@@ -63,7 +63,7 @@ export function buildSecurityGroupSolutionApp(
 }
 
 export function buildConnectivitySolutionApp(
-  env: Environment,
+  env?: Environment,
 ): SecurityGroupApplication {
   const app = new App();
   const network = new NetworkStack(app, 'Connectivity-Network', { env });

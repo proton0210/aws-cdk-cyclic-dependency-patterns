@@ -7,11 +7,12 @@ export const TEST_ENV: Environment = {
 
 /**
  * CDK CLI populates CDK_DEFAULT_ACCOUNT and CDK_DEFAULT_REGION from the
- * selected AWS profile. The fallback makes local synthesis deterministic.
+ * selected AWS profile. Without credentials (for example, in CI), returning
+ * undefined keeps the stacks environment-agnostic and avoids context lookups.
  */
-export function environmentFromCli(): Environment {
-  return {
-    account: process.env.CDK_DEFAULT_ACCOUNT ?? TEST_ENV.account,
-    region: process.env.CDK_DEFAULT_REGION ?? TEST_ENV.region,
-  };
+export function environmentFromCli(): Environment | undefined {
+  const account = process.env.CDK_DEFAULT_ACCOUNT;
+  const region = process.env.CDK_DEFAULT_REGION;
+
+  return account && region ? { account, region } : undefined;
 }

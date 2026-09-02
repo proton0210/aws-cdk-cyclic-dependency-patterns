@@ -69,7 +69,7 @@ export interface ExportMigrationApplication {
  */
 export function buildExportMigrationApp(
   referenceStrength: ReferenceStrength,
-  env: Environment,
+  env?: Environment,
 ): ExportMigrationApplication {
   const app = new App();
   const data = new DataStack(app, 'ExportMigration-Data', {
