@@ -37,7 +37,7 @@ workflow permissions, chargeable resources, and deployment behavior. Write
 - [ ] I linked the required accepted issue or discussion.
 - [ ] `npm run check:repository` passes.
 - [ ] `npm run build` passes.
-- [ ] `npm test` passes.
+- [ ] `npm run test:coverage` passes and meets the configured thresholds.
 - [ ] `npm run synth:all:valid` passes without AWS credentials.
 - [ ] Intentional problem examples still fail for the documented reason.
 - [ ] Scenario README, article text, and diagrams match the code change.

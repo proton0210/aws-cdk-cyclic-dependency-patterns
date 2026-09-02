@@ -21,9 +21,25 @@ npm run build
 npm test
 
 total_validated=0
+expected_total=16
+
+# Validation must be repeatable and must not reuse obsolete synthesized files.
+rm -rf \
+  cdk.out/connectivity-solution \
+  cdk.out/export-migration \
+  cdk.out/problems/s3-lambda \
+  cdk.out/problems/security-group \
+  cdk.out/solutions \
+  cdk.out/validation
+mkdir -p cdk.out/validation
+
+run_synth() {
+  CDK_EXAMPLES_ENV_AGNOSTIC=1 npm run "$1"
+}
 
 validate_templates() {
   local template_root="$1"
+  local expected="$2"
   local validated=0
   local template_file
 
@@ -38,23 +54,24 @@ validate_templates() {
     total_validated=$((total_validated + 1))
   done
 
-  if [[ "$validated" -eq 0 ]]; then
-    echo "No templates found under $template_root" >&2
+  if [[ "$validated" -ne "$expected" ]]; then
+    echo "Expected $expected templates under $template_root, found $validated." >&2
     return 1
   fi
 }
 
 echo "Synthesizing and validating all solution stacks..."
-npm run synth:solutions -- "${profile_args[@]}"
-validate_templates "cdk.out/solutions"
+run_synth synth:solutions
+validate_templates "cdk.out/solutions" 6
 
 echo "Synthesizing and validating the downstream connectivity solution..."
-npm run synth:sg:connectivity -- "${profile_args[@]}"
-validate_templates "cdk.out/connectivity-solution"
+run_synth synth:sg:connectivity
+validate_templates "cdk.out/connectivity-solution" 4
 
 echo "Confirming the S3/Lambda problem fails CloudFormation validation..."
-npm run synth:s3:problem -- "${profile_args[@]}"
-mkdir -p cdk.out/validation
+run_synth synth:s3:problem \
+  >cdk.out/validation/s3-problem-synth.out \
+  2>cdk.out/validation/s3-problem-synth.err
 if aws cloudformation validate-template \
   "${profile_args[@]}" \
   --template-body "file://$repo_root/cdk.out/problems/s3-lambda/Problem-S3LambdaCycle.template.json" \
@@ -67,7 +84,7 @@ rg -q 'Circular dependency between resources' cdk.out/validation/s3-problem.err
 echo "Observed expected S3/Lambda circular dependency."
 
 echo "Confirming the security-group problem fails CDK synthesis..."
-if npm run synth:sg:problem -- "${profile_args[@]}" \
+if run_synth synth:sg:problem \
   >cdk.out/validation/security-group-problem.out \
   2>cdk.out/validation/security-group-problem.err; then
   echo "Expected security-group problem synthesis to fail." >&2
@@ -80,9 +97,14 @@ echo "Observed expected cross-stack cyclic reference."
 
 for phase in strong both weak; do
   echo "Synthesizing export migration phase: $phase"
-  npm run "synth:export:$phase" -- "${profile_args[@]}"
-  validate_templates "cdk.out/export-migration/$phase"
+  run_synth "synth:export:$phase"
+  validate_templates "cdk.out/export-migration/$phase" 2
 done
+
+if [[ "$total_validated" -ne "$expected_total" ]]; then
+  echo "Expected $expected_total validated templates, found $total_validated." >&2
+  exit 1
+fi
 
 echo "Validated $total_validated solution and migration templates."
 echo "All expected failures and solution templates validated with $credential_source."

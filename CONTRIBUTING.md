@@ -62,9 +62,7 @@ git clone \
 
 cd aws-cdk-cyclic-dependency-patterns
 npm ci
-npm run build
-npm test
-npm run synth:all:valid
+npm run check
 ```
 
 The valid synthesis command does not require AWS credentials. Keep new tests and
@@ -138,7 +136,7 @@ digits, or hyphens. The summary must be specific and must not end with a period.
 | Automated proof | Tests that fail without the correction and inspect synthesized behavior |
 | Local policy | `npm run check:repository` passes |
 | Build | `npm run build` passes under the supported Node.js version |
-| Tests | `npm test` passes with no skipped replacement for relevant assertions |
+| Tests | `npm run test:coverage` passes with no skipped replacement for relevant assertions and all coverage thresholds met |
 | Synthesis | `npm run synth:all:valid` succeeds without credentials or cached context |
 | Documentation | Scenario README, article, Mermaid, and PNG assets agree with the code |
 | Security | No secret, real account ID, customer data, privilege expansion, or undocumented destructive setting |
@@ -260,7 +258,7 @@ Before requesting review, confirm that:
 - a required design issue or scenario proposal is linked;
 - `npm run check:repository` passes;
 - `npm run build` passes;
-- `npm test` passes;
+- `npm run test:coverage` passes;
 - `npm run synth:all:valid` passes without credentials;
 - intentional problem commands still fail for the documented reason;
 - documentation and diagrams match the synthesized graph;

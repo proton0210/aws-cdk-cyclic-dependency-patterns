@@ -3,11 +3,28 @@
   "version": "1.0.0",
   "private": true,
   "description": "Reproducible AWS CDK cyclic dependency problems and TypeScript solutions.",
+  "keywords": [
+    "aws-cdk",
+    "cloudformation",
+    "cyclic-dependency",
+    "infrastructure-as-code",
+    "typescript"
+  ],
+  "homepage": "https://github.com/proton0210/aws-cdk-cyclic-dependency-patterns#readme",
+  "bugs": {
+    "url": "https://github.com/proton0210/aws-cdk-cyclic-dependency-patterns/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/proton0210/aws-cdk-cyclic-dependency-patterns.git"
+  },
   "license": "MIT",
   "scripts": {
     "build": "tsc --noEmit",
+    "check": "npm run check:repository && npm run build && npm run test:coverage && npm run synth:all:valid",
     "check:repository": "bash scripts/check-repository.sh",
     "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage",
     "synth": "npm run synth:solutions",
     "synth:all:valid": "npm run synth:solutions && npm run synth:sg:connectivity && npm run synth:export:strong && npm run synth:export:both && npm run synth:export:weak",
     "synth:solutions": "cdk synth --app 'npx ts-node --prefer-ts-exts bin/solutions.ts' --output cdk.out/solutions",

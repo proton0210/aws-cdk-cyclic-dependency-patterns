@@ -8,9 +8,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -20,6 +25,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm audit --audit-level=high
       - name: Validate pull-request metadata
         if: github.event_name == 'pull_request'
         env:
@@ -40,5 +46,5 @@ jobs:
           fi
       - run: npm run check:repository
       - run: npm run build
-      - run: npm test
+      - run: npm run test:coverage
       - run: npm run synth:all:valid

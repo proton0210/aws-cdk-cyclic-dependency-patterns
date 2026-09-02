@@ -7,10 +7,11 @@ reproducible AWS CDK examples. Each scenario contains an intentionally broken
 implementation, a corrected dependency graph, construct-level documentation,
 and tests that inspect the synthesized CloudFormation behavior.
 
-The examples accompany the article **Overcoming Cyclic Dependencies in AWS CDK
-with TypeScript**. They were compiled against `aws-cdk-lib` 2.267.0 and
-validated with an isolated test identity without deploying resources. No AWS
-profile name or credential is stored in this repository.
+The examples accompany the AWS Builder Center article
+[**Overcoming Cyclic Dependencies in AWS CDK with TypeScript**](https://builder.aws.com/content/3Il5J6C4XSfW0RbRzyMuUgxTEkf/overcoming-cyclic-dependencies-in-aws-cdk).
+They were compiled against `aws-cdk-lib` 2.267.0 and validated with an isolated
+test identity without deploying resources. No AWS profile name or credential is
+stored in this repository.
 
 > A cycle is a graph problem. Fix it by removing, deferring, reversing, or
 > externalizing an edge. `addDependency()` only adds another edge.
@@ -100,7 +101,8 @@ Every scenario directory has its own README with:
 - npm
 - AWS CLI v2 for AWS-backed template validation
 - `rg` (ripgrep), used by the validation script
-- an AWS profile with permission for `sts:GetCallerIdentity` and
+- AWS credentials and a Region resolved by the standard AWS provider chain,
+  with permission for `sts:GetCallerIdentity` and
   `cloudformation:ValidateTemplate`
 
 The exact package versions are locked in `package-lock.json`:
@@ -113,15 +115,15 @@ The exact package versions are locked in `package-lock.json`:
 
 ```bash
 npm ci
-npm run build
-npm test
-npm run synth:all:valid
+npm run check
 ```
 
-The solution synthesis is credential-independent. Without an AWS profile, the
-entrypoints create environment-agnostic stacks so CI does not depend on a local
-`cdk.context.json` file. When `--profile` is supplied, the CDK CLI provides the
-selected account and Region at the application boundary.
+`npm run check` performs repository-policy validation, a strict TypeScript
+build, tests with coverage thresholds, and credential-independent synthesis of
+every valid solution. Without an AWS credential source, the entrypoints create
+environment-agnostic stacks so CI does not depend on a local `cdk.context.json`
+file. When `--profile` is supplied directly to a standalone CDK command, the CDK
+CLI can provide the selected account and Region at the application boundary.
 
 ## Validate with AWS credentials
 
@@ -135,6 +137,11 @@ AWS_PROFILE=my-test-profile npm run validate:aws
 
 `AWS_PROFILE` is optional and is supplied by the caller. The repository never
 provides, persists, or assumes a particular profile.
+
+The validation script deliberately synthesizes environment-agnostic templates,
+even when AWS credentials are available. This prevents account-specific CDK
+context lookups and keeps AWS access limited to STS identity verification and
+CloudFormation template validation.
 
 The script performs the following checks:
 
@@ -214,6 +221,9 @@ return successfully:
 - strong references contain `Export` and `Fn::ImportValue`;
 - `BOTH` retains the export while the consumer uses `Fn::GetStackOutput`;
 - `WEAK` removes the export lock.
+
+Coverage thresholds are enforced at 95% for statements and lines, 95% for
+functions, and 80% for branches.
 
 ## Design rules demonstrated
 

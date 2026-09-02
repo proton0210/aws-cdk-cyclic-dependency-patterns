@@ -70,7 +70,11 @@ Source: [`solution-stack.ts`](solution-stack.ts)
 The solution uses these L2 APIs:
 
 ```ts
-const bucket = new Bucket(this, 'Uploads');
+const bucket = new Bucket(this, 'Uploads', {
+  blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+  encryption: BucketEncryption.S3_MANAGED,
+  enforceSSL: true,
+});
 const handler = new LambdaFunction(this, 'Processor', {
   runtime: Runtime.NODEJS_22_X,
   handler: 'index.handler',

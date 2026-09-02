@@ -24,6 +24,23 @@ describe('S3 to Lambda notification cycle', () => {
     const template = Template.fromStack(stack);
 
     template.resourceCountIs('Custom::S3BucketNotifications', 1);
+    template.hasResourceProperties('AWS::S3::Bucket', {
+      BucketEncryption: {
+        ServerSideEncryptionConfiguration: [
+          {
+            ServerSideEncryptionByDefault: {
+              SSEAlgorithm: 'AES256',
+            },
+          },
+        ],
+      },
+      PublicAccessBlockConfiguration: {
+        BlockPublicAcls: true,
+        BlockPublicPolicy: true,
+        IgnorePublicAcls: true,
+        RestrictPublicBuckets: true,
+      },
+    });
     expect(findResourceCycles(template.toJSON())).toEqual([]);
   });
 });

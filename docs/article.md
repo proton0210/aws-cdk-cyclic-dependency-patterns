@@ -26,7 +26,7 @@ are available in the public repository:
 [aws-cdk-cyclic-dependency-patterns](https://github.com/proton0210/aws-cdk-cyclic-dependency-patterns).
 
 The examples were compiled against `aws-cdk-lib` 2.267.0. On September 2, 2026,
-the repository passed eight tests, credential-free synthesis, CloudFormation
+the repository passed fourteen tests, credential-free synthesis, CloudFormation
 validation for sixteen valid templates, and both expected negative checks using
 an isolated test identity. The validation path did not deploy any AWS resources,
 and the repository stores neither a profile name nor credentials.
@@ -247,6 +247,7 @@ The solution stack uses `Bucket`, `Function`, `LambdaDestination`, and
 ```ts
 const bucket = new Bucket(this, 'Uploads', {
   blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+  encryption: BucketEncryption.S3_MANAGED,
   enforceSSL: true,
   removalPolicy: RemovalPolicy.DESTROY,
   autoDeleteObjects: true,
