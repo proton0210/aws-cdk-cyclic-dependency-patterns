@@ -1,0 +1,73 @@
+name: Bug report
+description: Report an incorrect example, assertion, command, or dependency graph.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem. Remove credentials, AWS account IDs,
+        production names, and customer templates before submitting.
+  - type: dropdown
+    id: scenario
+    attributes:
+      label: Scenario
+      options:
+        - S3 notification and Lambda
+        - ECS, Aurora, and security groups
+        - Cross-stack export migration
+        - Repository tooling or validation
+        - Documentation or diagrams
+        - New or other scenario
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Explain the observed behavior and why it appears incorrect.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include commands and sanitized code or template excerpts.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Error and synthesized evidence
+      description: Include the exact sanitized error and relevant dependency edges.
+  - type: input
+    id: cdk_version
+    attributes:
+      label: AWS CDK version
+      placeholder: aws-cdk-lib 2.x.x / aws-cdk CLI 2.x.x
+    validations:
+      required: true
+  - type: input
+    id: node_version
+    attributes:
+      label: Node.js version
+      placeholder: v22.x.x
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed credentials, account IDs, private resource names, and customer data.
+          required: true
+        - label: I searched existing issues and discussions for this problem.
+          required: true

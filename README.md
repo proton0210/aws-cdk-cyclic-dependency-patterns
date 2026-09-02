@@ -1,5 +1,7 @@
 # AWS CDK cyclic dependency patterns in TypeScript
 
+[![CI](https://github.com/proton0210/aws-cdk-cyclic-dependency-patterns/actions/workflows/ci.yml/badge.svg)](https://github.com/proton0210/aws-cdk-cyclic-dependency-patterns/actions/workflows/ci.yml)
+
 This repository turns three common “cyclic dependency” failures into
 reproducible AWS CDK examples. Each scenario contains an intentionally broken
 implementation, a corrected dependency graph, construct-level documentation,
@@ -214,6 +216,17 @@ return successfully:
 - [CloudFormation `Fn::ImportValue`](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/intrinsic-function-reference-importvalue.html)
 - [CloudFormation `Fn::GetStackOutput`](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/intrinsic-function-reference-getstackoutput.html)
 - [AWS guidance for CloudFormation circular dependencies](https://aws.amazon.com/blogs/infrastructure-and-automation/handling-circular-dependency-errors-in-aws-cloudformation/)
+
+## Contributing
+
+Issues, scenario proposals, discussions, documentation improvements, and pull
+requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), follow the
+[Code of Conduct](CODE_OF_CONDUCT.md), and use private vulnerability reporting
+for security-sensitive findings.
+
+New scenarios should include an intentionally failing implementation, a
+construct-level explanation of the cycle, a corrected acyclic graph, and tests
+that inspect the synthesized behavior.
 
 ## License
 

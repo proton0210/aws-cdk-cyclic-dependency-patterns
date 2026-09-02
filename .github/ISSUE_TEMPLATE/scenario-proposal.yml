@@ -1,0 +1,65 @@
+name: Scenario proposal
+description: Propose a new reproducible CDK cyclic-dependency scenario and solution.
+title: "[Scenario]: "
+labels:
+  - enhancement
+  - help wanted
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A strong proposal identifies the failure layer, the shortest closed path,
+        and evidence that the proposed solution changes the synthesized graph.
+  - type: textarea
+    id: requirement
+    attributes:
+      label: Runtime requirement
+      description: What should the AWS services do after deployment?
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Failure layer
+      options:
+        - CDK synthesis
+        - CloudFormation template validation or create
+        - CloudFormation update or deletion
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: constructs
+    attributes:
+      label: Constructs and resources
+      description: List the L1/L2/L3 constructs and important generated resources.
+    validations:
+      required: true
+  - type: textarea
+    id: graph
+    attributes:
+      label: Smallest dependency graph
+      description: Write arrows as consumer → producer and identify the closed path.
+      placeholder: StackA → StackB → StackA
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Which edge will be removed, deferred, reversed, or externalized?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Reproduction evidence
+      description: Provide sanitized commands, errors, documentation, or a minimal repository.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to open a pull request for this scenario.
+        - label: I can add tests that prove both the failure and solution.
+        - label: I can update the construct-level diagrams and README.
