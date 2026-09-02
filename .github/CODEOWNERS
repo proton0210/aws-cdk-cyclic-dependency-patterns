@@ -1,0 +1,9 @@
+# Maintainer review is required for every change.
+* @proton0210
+
+# Treat workflow, security, and contribution-policy changes as sensitive.
+/.github/ @proton0210
+/SECURITY.md @proton0210
+/CONTRIBUTING.md @proton0210
+/GOVERNANCE.md @proton0210
+/scripts/ @proton0210

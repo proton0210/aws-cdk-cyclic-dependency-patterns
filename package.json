@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --noEmit",
+    "check:repository": "bash scripts/check-repository.sh",
     "test": "jest --runInBand",
     "synth": "npm run synth:solutions",
     "synth:all:valid": "npm run synth:solutions && npm run synth:sg:connectivity && npm run synth:export:strong && npm run synth:export:both && npm run synth:export:weak",

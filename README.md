@@ -224,6 +224,12 @@ requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), follow the
 [Code of Conduct](CODE_OF_CONDUCT.md), and use private vulnerability reporting
 for security-sensitive findings.
 
+Contributor changes must use a protected pull-request workflow: accepted design
+context when required, valid branch and title formats, repository policy checks,
+build/tests/synthesis, resolved review conversations, and code-owner approval.
+Project roles and the narrow administrative-bypass policy are defined in
+[GOVERNANCE.md](GOVERNANCE.md).
+
 New scenarios should include an intentionally failing implementation, a
 construct-level explanation of the cycle, a corrected acyclic graph, and tests
 that inspect the synthesized behavior.
