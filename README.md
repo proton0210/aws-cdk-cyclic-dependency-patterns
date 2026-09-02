@@ -16,13 +16,28 @@ validated with the `dev-academy` AWS profile without deploying resources.
 
 ![Flow from CDK constructs to the CloudFormation dependency graph](docs/diagrams/cdk-to-cloudformation-flow.png)
 
-## What is reproduced
+## Problems and implemented solutions
 
-| Scenario | Failure layer | Intentionally broken graph | Validated solution |
+**Every failure demonstrated in this repository has runnable TypeScript solution
+code.** The problem implementations remain isolated behind their own
+entrypoints, while the default application synthesizes only valid solutions.
+
+| Scenario | Problem implementation | Implemented solution | Run the solution |
 |---|---|---|---|
-| [S3 notification and Lambda](lib/s3-lambda/) | One CloudFormation template | Bucket notification, function role, and bucket ARN close a resource loop | S3 and Lambda L2 constructs defer notification mutation with `Custom::S3BucketNotifications` |
-| [ECS, Aurora, and security groups](lib/security-groups/) | CDK stack synthesis | Compute imports the DB endpoint while a DB-owned ingress rule imports `ServiceSg` | Put both connection rules in the already-dependent compute stack or a downstream connectivity stack |
-| [Cross-stack export removal](lib/export-deadlock/) | CloudFormation update | A deployed consumer still imports an export that the producer update removes | Deploy `STRONG → BOTH → WEAK`, then remove the consumer reference or producer resource |
+| [S3 notification and Lambda](lib/s3-lambda/) | [`problem-stack.ts`](lib/s3-lambda/problem-stack.ts) creates a CloudFormation resource cycle | [`solution-stack.ts`](lib/s3-lambda/solution-stack.ts) defers notification mutation with `Custom::S3BucketNotifications` | `npm run synth:s3:solution` |
+| [ECS, Aurora, and security groups](lib/security-groups/) | [`buildSecurityGroupProblemApp()`](lib/security-groups/apps.ts) creates a cross-stack cycle | [`buildSecurityGroupSolutionApp()`](lib/security-groups/apps.ts) puts both rules in the consumer; [`ConnectivityStack`](lib/security-groups/connectivity-stack.ts) provides a downstream-owner alternative | `npm run synth:sg:solution` or `npm run synth:sg:connectivity` |
+| [Cross-stack export removal](lib/export-deadlock/) | `ReferenceStrength.STRONG` models the export contract that can deadlock a later update | [`stacks.ts`](lib/export-deadlock/stacks.ts) and the phase entrypoints implement the `STRONG → BOTH → WEAK` migration | `npm run synth:export:strong`, then `both`, then `weak` |
+
+The solutions change the dependency graph rather than suppressing an error:
+
+- the S3 solution defers a relationship until both endpoints and permission
+  exist;
+- the security-group solutions move relationship-resource ownership downstream;
+- the export solution migrates the deployed reference contract in three ordered
+  phases.
+
+Run `npm run synth:all:valid` to synthesize every valid solution. Run `npm test`
+to verify the generated resource ownership and reference mechanisms.
 
 The scenarios are deliberately different. The first is a resource cycle inside
 one template, the second is a cycle between CDK stacks, and the third is a
