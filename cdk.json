@@ -1,0 +1,13 @@
+{
+  "app": "npx ts-node --prefer-ts-exts bin/solutions.ts",
+  "context": {
+    "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": true,
+    "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:defaultCrossStackReferences": "strong",
+    "@aws-cdk/core:enablePartitionLiterals": true,
+    "@aws-cdk/core:target-partitions": ["aws"],
+    "@aws-cdk/core:validateAgainstDefaultRules": true
+  }
+}

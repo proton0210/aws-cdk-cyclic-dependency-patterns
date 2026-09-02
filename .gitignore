@@ -1,0 +1,10 @@
+node_modules/
+cdk.out/
+cdk.context.json
+coverage/
+dist/
+.DS_Store
+*.js
+*.d.ts
+!jest.config.js
+!.github/
