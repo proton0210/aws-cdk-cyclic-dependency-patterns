@@ -29,10 +29,22 @@ function collectReferences(value: unknown, references: Set<string>): void {
     : Array.isArray(sub) && typeof sub[0] === 'string'
       ? sub[0]
       : undefined;
+  const subVariables = Array.isArray(sub)
+    && sub.length > 1
+    && sub[1] !== null
+    && typeof sub[1] === 'object'
+    && !Array.isArray(sub[1])
+    ? new Set(Object.keys(sub[1] as Record<string, unknown>))
+    : new Set<string>();
 
   if (subTemplate !== undefined) {
     for (const match of subTemplate.matchAll(/\$\{([A-Za-z0-9]+)(?:\.[^}]+)?\}/g)) {
-      references.add(match[1]);
+      // A variable supplied by Fn::Sub's second argument is not an implicit
+      // resource reference. References inside the variable value are still
+      // found by the recursive traversal below.
+      if (!subVariables.has(match[1])) {
+        references.add(match[1]);
+      }
     }
   }
 

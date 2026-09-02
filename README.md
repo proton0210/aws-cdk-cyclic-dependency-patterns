@@ -7,22 +7,39 @@ reproducible AWS CDK examples. Each scenario contains an intentionally broken
 implementation, a corrected dependency graph, construct-level documentation,
 and tests that inspect the synthesized CloudFormation behavior.
 
-The examples accompany the article **Overcoming Cyclic Dependencies in AWS CDK
-with TypeScript**. They were compiled against `aws-cdk-lib` 2.267.0 and
-validated with the `dev-academy` AWS profile without deploying resources.
+The examples accompany the AWS Builder Center article
+[**Overcoming Cyclic Dependencies in AWS CDK with TypeScript**](https://builder.aws.com/content/3Il5J6C4XSfW0RbRzyMuUgxTEkf/overcoming-cyclic-dependencies-in-aws-cdk).
+They were compiled against `aws-cdk-lib` 2.267.0 and validated with an isolated
+test identity without deploying resources. No AWS profile name or credential is
+stored in this repository.
 
 > A cycle is a graph problem. Fix it by removing, deferring, reversing, or
 > externalizing an edge. `addDependency()` only adds another edge.
 
 ![Flow from CDK constructs to the CloudFormation dependency graph](docs/diagrams/cdk-to-cloudformation-flow.png)
 
-## What is reproduced
+## Problems and implemented solutions
 
-| Scenario | Failure layer | Intentionally broken graph | Validated solution |
+**Every failure demonstrated in this repository has runnable TypeScript solution
+code.** The problem implementations remain isolated behind their own
+entrypoints, while the default application synthesizes only valid solutions.
+
+| Scenario | Problem implementation | Implemented solution | Run the solution |
 |---|---|---|---|
-| [S3 notification and Lambda](lib/s3-lambda/) | One CloudFormation template | Bucket notification, function role, and bucket ARN close a resource loop | S3 and Lambda L2 constructs defer notification mutation with `Custom::S3BucketNotifications` |
-| [ECS, Aurora, and security groups](lib/security-groups/) | CDK stack synthesis | Compute imports the DB endpoint while a DB-owned ingress rule imports `ServiceSg` | Put both connection rules in the already-dependent compute stack or a downstream connectivity stack |
-| [Cross-stack export removal](lib/export-deadlock/) | CloudFormation update | A deployed consumer still imports an export that the producer update removes | Deploy `STRONG → BOTH → WEAK`, then remove the consumer reference or producer resource |
+| [S3 notification and Lambda](lib/s3-lambda/) | [`problem-stack.ts`](lib/s3-lambda/problem-stack.ts) creates a CloudFormation resource cycle | [`solution-stack.ts`](lib/s3-lambda/solution-stack.ts) defers notification mutation with `Custom::S3BucketNotifications` | `npm run synth:s3:solution` |
+| [ECS, Aurora, and security groups](lib/security-groups/) | [`buildSecurityGroupProblemApp()`](lib/security-groups/apps.ts) creates a cross-stack cycle | [`buildSecurityGroupSolutionApp()`](lib/security-groups/apps.ts) puts both rules in the consumer; [`ConnectivityStack`](lib/security-groups/connectivity-stack.ts) provides a downstream-owner alternative | `npm run synth:sg:solution` or `npm run synth:sg:connectivity` |
+| [Cross-stack export removal](lib/export-deadlock/) | `ReferenceStrength.STRONG` models the export contract that can deadlock a later update | [`stacks.ts`](lib/export-deadlock/stacks.ts) and the phase entrypoints implement the `STRONG → BOTH → WEAK` migration | `npm run synth:export:strong`, then `both`, then `weak` |
+
+The solutions change the dependency graph rather than suppressing an error:
+
+- the S3 solution defers a relationship until both endpoints and permission
+  exist;
+- the security-group solutions move relationship-resource ownership downstream;
+- the export solution migrates the deployed reference contract in three ordered
+  phases.
+
+Run `npm run synth:all:valid` to synthesize every valid solution. Run `npm test`
+to verify the generated resource ownership and reference mechanisms.
 
 The scenarios are deliberately different. The first is a resource cycle inside
 one template, the second is a cycle between CDK stacks, and the third is a
@@ -84,7 +101,8 @@ Every scenario directory has its own README with:
 - npm
 - AWS CLI v2 for AWS-backed template validation
 - `rg` (ripgrep), used by the validation script
-- an AWS profile with permission for `sts:GetCallerIdentity` and
+- AWS credentials and a Region resolved by the standard AWS provider chain,
+  with permission for `sts:GetCallerIdentity` and
   `cloudformation:ValidateTemplate`
 
 The exact package versions are locked in `package-lock.json`:
@@ -97,25 +115,37 @@ The exact package versions are locked in `package-lock.json`:
 
 ```bash
 npm ci
-npm run build
-npm test
-npm run synth:all:valid
+npm run check
 ```
 
-The solution synthesis is credential-independent. Without an AWS profile, the
-entrypoints create environment-agnostic stacks so CI does not depend on a local
-`cdk.context.json` file. When `--profile` is supplied, the CDK CLI provides the
-selected account and Region at the application boundary.
+`npm run check` performs repository-policy validation, a strict TypeScript
+build, tests with coverage thresholds, and credential-independent synthesis of
+every valid solution. Without an AWS credential source, the entrypoints create
+environment-agnostic stacks so CI does not depend on a local `cdk.context.json`
+file. When `--profile` is supplied directly to a standalone CDK command, the CDK
+CLI can provide the selected account and Region at the application boundary.
 
-## Validate with an AWS profile
+## Validate with AWS credentials
 
 ```bash
-AWS_PROFILE=dev-academy npm run validate:aws
+# Use the standard AWS credential provider chain.
+npm run validate:aws
+
+# Or select any locally configured named profile.
+AWS_PROFILE=my-test-profile npm run validate:aws
 ```
+
+`AWS_PROFILE` is optional and is supplied by the caller. The repository never
+provides, persists, or assumes a particular profile.
+
+The validation script deliberately synthesizes environment-agnostic templates,
+even when AWS credentials are available. This prevents account-specific CDK
+context lookups and keeps AWS access limited to STS identity verification and
+CloudFormation template validation.
 
 The script performs the following checks:
 
-1. Calls STS `GetCallerIdentity` to confirm the profile works.
+1. Calls STS `GetCallerIdentity` to confirm the selected credentials work.
 2. Compiles the TypeScript and runs all tests.
 3. Synthesizes every solution stack.
 4. Calls CloudFormation `ValidateTemplate` for each valid template.
@@ -141,8 +171,8 @@ data-retention decision.
 ### S3 and Lambda
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:s3:problem
-AWS_PROFILE=dev-academy npm run synth:s3:solution
+npm run synth:s3:problem
+npm run synth:s3:solution
 ```
 
 The problem synthesizes a template, but CloudFormation validation rejects that
@@ -152,13 +182,13 @@ template. See [the S3/Lambda walkthrough](lib/s3-lambda/).
 
 ```bash
 # Expected CDK synthesis failure.
-AWS_PROFILE=dev-academy npm run synth:sg:problem
+npm run synth:sg:problem
 
 # ComputeStack owns ingress and egress relationship resources.
-AWS_PROFILE=dev-academy npm run synth:sg:solution
+npm run synth:sg:solution
 
 # A downstream ConnectivityStack owns both relationship resources.
-AWS_PROFILE=dev-academy npm run synth:sg:connectivity
+npm run synth:sg:connectivity
 ```
 
 See [the ECS/Aurora walkthrough](lib/security-groups/).
@@ -166,9 +196,9 @@ See [the ECS/Aurora walkthrough](lib/security-groups/).
 ### Export migration
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:export:strong
-AWS_PROFILE=dev-academy npm run synth:export:both
-AWS_PROFILE=dev-academy npm run synth:export:weak
+npm run synth:export:strong
+npm run synth:export:both
+npm run synth:export:weak
 ```
 
 All three entrypoints use the same CloudFormation stack names so the templates
@@ -191,6 +221,9 @@ return successfully:
 - strong references contain `Export` and `Fn::ImportValue`;
 - `BOTH` retains the export while the consumer uses `Fn::GetStackOutput`;
 - `WEAK` removes the export lock.
+
+Coverage thresholds are enforced at 95% for statements and lines, 95% for
+functions, and 80% for branches.
 
 ## Design rules demonstrated
 

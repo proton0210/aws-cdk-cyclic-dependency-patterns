@@ -26,9 +26,10 @@ are available in the public repository:
 [aws-cdk-cyclic-dependency-patterns](https://github.com/proton0210/aws-cdk-cyclic-dependency-patterns).
 
 The examples were compiled against `aws-cdk-lib` 2.267.0. On September 2, 2026,
-the repository passed eight tests, credential-free synthesis, CloudFormation
+the repository passed fourteen tests, credential-free synthesis, CloudFormation
 validation for sixteen valid templates, and both expected negative checks using
-`AWS_PROFILE=dev-academy`. The validation path did not deploy any AWS resources.
+an isolated test identity. The validation path did not deploy any AWS resources,
+and the repository stores neither a profile name nor credentials.
 
 ![Flow from CDK constructs to a CloudFormation dependency graph](https://raw.githubusercontent.com/proton0210/aws-cdk-cyclic-dependency-patterns/main/docs/diagrams/cdk-to-cloudformation-flow.png)
 
@@ -217,10 +218,9 @@ The stack can synthesize because CDK is able to emit the L1 resources.
 CloudFormation rejects the resulting template:
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:s3:problem
+npm run synth:s3:problem
 
 aws cloudformation validate-template \
-  --profile dev-academy \
   --template-body \
   file://"$PWD/cdk.out/problems/s3-lambda/Problem-S3LambdaCycle.template.json"
 ```
@@ -247,6 +247,7 @@ The solution stack uses `Bucket`, `Function`, `LambdaDestination`, and
 ```ts
 const bucket = new Bucket(this, 'Uploads', {
   blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+  encryption: BucketEncryption.S3_MANAGED,
   enforceSSL: true,
   removalPolicy: RemovalPolicy.DESTROY,
   autoDeleteObjects: true,
@@ -291,7 +292,7 @@ There is no create-time `Bucket → Function` property, so the old closed path n
 longer exists.
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:s3:solution
+npm run synth:s3:solution
 ```
 
 The repository test verifies both architectural outcomes:
@@ -394,7 +395,7 @@ ComputeStack → DatabaseStack → ComputeStack
 The failure appears during CDK synthesis:
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:sg:problem
+npm run synth:sg:problem
 ```
 
 Expected evidence includes:
@@ -448,7 +449,7 @@ ComputeStack, including the relationship rules → DatabaseStack → NetworkStac
 ```
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:sg:solution
+npm run synth:sg:solution
 ```
 
 ### Solution B: use a downstream connectivity stack
@@ -498,7 +499,7 @@ essential: if the edge stack exports a value back to either endpoint, the cycle
 can reappear.
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:sg:connectivity
+npm run synth:sg:connectivity
 ```
 
 ### What about `remoteRule: true`?
@@ -657,9 +658,9 @@ producer output, table, or stack.
 For a real environment, every phase should have its own review and deployment:
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:export:strong
-AWS_PROFILE=dev-academy npm run synth:export:both
-AWS_PROFILE=dev-academy npm run synth:export:weak
+npm run synth:export:strong
+npm run synth:export:both
+npm run synth:export:weak
 ```
 
 Do not edit the code through all three states and deploy only the final commit.
@@ -779,7 +780,7 @@ cycle inside one CDK application.
 ```bash
 npm run build
 npm test
-AWS_PROFILE=dev-academy npm run synth:sg:problem
+npm run synth:sg:problem
 ```
 
 Reducing the app to the smallest failing graph makes the edge direction easier
@@ -820,11 +821,9 @@ decisive evidence.
 ### Step 5: inspect deployed exports for update failures
 
 ```bash
-aws cloudformation list-exports \
-  --profile dev-academy
+aws cloudformation list-exports
 
 aws cloudformation list-imports \
-  --profile dev-academy \
   --export-name 'the-exact-export-name'
 ```
 
@@ -1024,7 +1023,10 @@ npm run synth:all:valid
 Run AWS-backed template validation:
 
 ```bash
-AWS_PROFILE=dev-academy npm run validate:aws
+npm run validate:aws
+
+# Optional: select any locally configured profile.
+AWS_PROFILE=my-test-profile npm run validate:aws
 ```
 
 The script calls only:

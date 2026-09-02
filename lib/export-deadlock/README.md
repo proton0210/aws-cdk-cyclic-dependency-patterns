@@ -66,9 +66,9 @@ flowchart LR
 Synthesize the three repository states:
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:export:strong
-AWS_PROFILE=dev-academy npm run synth:export:both
-AWS_PROFILE=dev-academy npm run synth:export:weak
+npm run synth:export:strong
+npm run synth:export:both
+npm run synth:export:weak
 ```
 
 These commands intentionally do not deploy. In a real migration, run and review

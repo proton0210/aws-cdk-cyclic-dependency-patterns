@@ -1,4 +1,4 @@
-import { Annotations, Template } from 'aws-cdk-lib/assertions';
+import { Match, Template } from 'aws-cdk-lib/assertions';
 import { TEST_ENV } from '../lib/common/environment';
 import {
   buildConnectivitySolutionApp,
@@ -8,9 +8,9 @@ import {
 
 describe('cross-stack security group cycle', () => {
   test('problem app reports the cyclic stack reference', () => {
-    const { compute } = buildSecurityGroupProblemApp(TEST_ENV);
+    const { app } = buildSecurityGroupProblemApp(TEST_ENV);
 
-    expect(() => Annotations.fromStack(compute)).toThrow(
+    expect(() => app.synth()).toThrow(
       /would create a cyclic reference/,
     );
   });
@@ -25,14 +25,24 @@ describe('cross-stack security group cycle', () => {
     Template.fromStack(compute).hasResourceProperties(
       'AWS::EC2::SecurityGroupIngress',
       {
+        GroupId: Match.objectLike({ 'Fn::ImportValue': Match.anyValue() }),
         IpProtocol: 'tcp',
         FromPort: 5432,
+        SourceSecurityGroupId: Match.objectLike({
+          'Fn::GetAtt': Match.arrayWith([Match.stringLikeRegexp('ServiceSg')]),
+        }),
         ToPort: 5432,
       },
     );
     Template.fromStack(compute).hasResourceProperties(
       'AWS::EC2::SecurityGroupEgress',
       {
+        DestinationSecurityGroupId: Match.objectLike({
+          'Fn::ImportValue': Match.anyValue(),
+        }),
+        GroupId: Match.objectLike({
+          'Fn::GetAtt': Match.arrayWith([Match.stringLikeRegexp('ServiceSg')]),
+        }),
         IpProtocol: 'tcp',
         FromPort: 5432,
         ToPort: 5432,
@@ -48,14 +58,22 @@ describe('cross-stack security group cycle', () => {
     Template.fromStack(connectivity!).hasResourceProperties(
       'AWS::EC2::SecurityGroupIngress',
       {
+        GroupId: Match.objectLike({ 'Fn::ImportValue': Match.anyValue() }),
         IpProtocol: 'tcp',
         FromPort: 5432,
+        SourceSecurityGroupId: Match.objectLike({
+          'Fn::ImportValue': Match.anyValue(),
+        }),
         ToPort: 5432,
       },
     );
     Template.fromStack(connectivity!).hasResourceProperties(
       'AWS::EC2::SecurityGroupEgress',
       {
+        DestinationSecurityGroupId: Match.objectLike({
+          'Fn::ImportValue': Match.anyValue(),
+        }),
+        GroupId: Match.objectLike({ 'Fn::ImportValue': Match.anyValue() }),
         IpProtocol: 'tcp',
         FromPort: 5432,
         ToPort: 5432,

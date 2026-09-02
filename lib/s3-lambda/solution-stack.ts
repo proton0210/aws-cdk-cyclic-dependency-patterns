@@ -4,7 +4,12 @@ import {
   Function as LambdaFunction,
   Runtime,
 } from 'aws-cdk-lib/aws-lambda';
-import { BlockPublicAccess, Bucket, EventType } from 'aws-cdk-lib/aws-s3';
+import {
+  BlockPublicAccess,
+  Bucket,
+  BucketEncryption,
+  EventType,
+} from 'aws-cdk-lib/aws-s3';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { Construct } from 'constructs';
 
@@ -19,6 +24,7 @@ export class S3LambdaSolutionStack extends Stack {
 
     const bucket = new Bucket(this, 'Uploads', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      encryption: BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,

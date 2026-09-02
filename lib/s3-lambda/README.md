@@ -53,10 +53,9 @@ cannot break this loop.
 ### Reproduce it
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:s3:problem
+npm run synth:s3:problem
 
 aws cloudformation validate-template \
-  --profile dev-academy \
   --template-body \
   file://"$PWD/cdk.out/problems/s3-lambda/Problem-S3LambdaCycle.template.json"
 ```
@@ -71,7 +70,11 @@ Source: [`solution-stack.ts`](solution-stack.ts)
 The solution uses these L2 APIs:
 
 ```ts
-const bucket = new Bucket(this, 'Uploads');
+const bucket = new Bucket(this, 'Uploads', {
+  blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+  encryption: BucketEncryption.S3_MANAGED,
+  enforceSSL: true,
+});
 const handler = new LambdaFunction(this, 'Processor', {
   runtime: Runtime.NODEJS_22_X,
   handler: 'index.handler',
@@ -118,7 +121,7 @@ to the function.
 ### Validate it
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:s3:solution
+npm run synth:s3:solution
 npm test -- --runTestsByPath test/s3-lambda.test.ts
 ```
 
