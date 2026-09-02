@@ -30,10 +30,19 @@ describe('cross-stack security group cycle', () => {
         ToPort: 5432,
       },
     );
+    Template.fromStack(compute).hasResourceProperties(
+      'AWS::EC2::SecurityGroupEgress',
+      {
+        IpProtocol: 'tcp',
+        FromPort: 5432,
+        ToPort: 5432,
+      },
+    );
   });
 
-  test('connectivity solution keeps the rule in a downstream edge stack', () => {
-    const { connectivity } = buildConnectivitySolutionApp(TEST_ENV);
+  test('connectivity solution keeps both rules in a downstream edge stack', () => {
+    const { app, connectivity, database } =
+      buildConnectivitySolutionApp(TEST_ENV);
 
     expect(connectivity).toBeDefined();
     Template.fromStack(connectivity!).hasResourceProperties(
@@ -44,5 +53,18 @@ describe('cross-stack security group cycle', () => {
         ToPort: 5432,
       },
     );
+    Template.fromStack(connectivity!).hasResourceProperties(
+      'AWS::EC2::SecurityGroupEgress',
+      {
+        IpProtocol: 'tcp',
+        FromPort: 5432,
+        ToPort: 5432,
+      },
+    );
+    Template.fromStack(database).resourceCountIs(
+      'AWS::EC2::SecurityGroupIngress',
+      0,
+    );
+    expect(() => app.synth()).not.toThrow();
   });
 });

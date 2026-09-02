@@ -14,18 +14,23 @@ echo "Building and testing TypeScript..."
 npm run build
 npm test
 
+total_validated=0
+
 validate_templates() {
   local template_root="$1"
   local validated=0
+  local template_file
 
-  while IFS= read -r template_file; do
+  for template_file in "$template_root"/*.template.json; do
+    [[ -f "$template_file" ]] || continue
     aws cloudformation validate-template \
       --profile "$validation_profile" \
       --template-body "file://$repo_root/$template_file" \
       >/dev/null
     echo "Validated: $template_file"
     validated=$((validated + 1))
-  done < <(rg --files "$template_root" -g '*.template.json' | sort)
+    total_validated=$((total_validated + 1))
+  done
 
   if [[ "$validated" -eq 0 ]]; then
     echo "No templates found under $template_root" >&2
@@ -36,6 +41,10 @@ validate_templates() {
 echo "Synthesizing and validating all solution stacks..."
 npm run synth:solutions -- --profile "$validation_profile"
 validate_templates "cdk.out/solutions"
+
+echo "Synthesizing and validating the downstream connectivity solution..."
+npm run synth:sg:connectivity -- --profile "$validation_profile"
+validate_templates "cdk.out/connectivity-solution"
 
 echo "Confirming the S3/Lambda problem fails CloudFormation validation..."
 npm run synth:s3:problem -- --profile "$validation_profile"
@@ -69,4 +78,5 @@ for phase in strong both weak; do
   validate_templates "cdk.out/export-migration/$phase"
 done
 
+echo "Validated $total_validated solution and migration templates."
 echo "All expected failures and solution templates validated with AWS_PROFILE=$validation_profile."

@@ -1,5 +1,6 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import {
+  CfnSecurityGroupEgress,
   CfnSecurityGroupIngress,
   ISecurityGroup,
 } from 'aws-cdk-lib/aws-ec2';
@@ -18,6 +19,18 @@ export class ConnectivityStack extends Stack {
     new CfnSecurityGroupIngress(this, 'DatabaseFromService', {
       groupId: props.databaseSg.securityGroupId,
       sourceSecurityGroupId: props.serviceSg.securityGroupId,
+      ipProtocol: 'tcp',
+      fromPort: 5432,
+      toPort: 5432,
+      description: 'ECS tasks to Aurora PostgreSQL',
+    });
+
+    // ServiceSg disables its default outbound rule. Keep both halves of the
+    // connection in this downstream edge stack so neither endpoint stack
+    // needs to import from the other.
+    new CfnSecurityGroupEgress(this, 'ServiceToDatabase', {
+      groupId: props.serviceSg.securityGroupId,
+      destinationSecurityGroupId: props.databaseSg.securityGroupId,
       ipProtocol: 'tcp',
       fromPort: 5432,
       toPort: 5432,
