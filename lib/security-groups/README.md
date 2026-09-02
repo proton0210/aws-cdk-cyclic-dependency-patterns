@@ -58,7 +58,7 @@ flowchart LR
 The CDK detects the stack cycle during synthesis:
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:sg:problem
+npm run synth:sg:problem
 ```
 
 Expected result: `would create a cyclic reference`.
@@ -98,7 +98,7 @@ There is still one runtime connection from ECS to Aurora, but only one
 deployment dependency direction.
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:sg:solution
+npm run synth:sg:solution
 ```
 
 ## Solution B: a downstream connectivity stack owns the connection
@@ -138,7 +138,7 @@ flowchart LR
 `ComputeStack` consumes an output from it, the graph can close again.
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:sg:connectivity
+npm run synth:sg:connectivity
 ```
 
 ## Choosing the owner

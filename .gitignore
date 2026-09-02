@@ -4,6 +4,13 @@ cdk.context.json
 coverage/
 dist/
 .DS_Store
+.env
+.env.*
+!.env.example
+credentials
+*.pem
+*.key
+*.p12
 *.js
 *.d.ts
 !jest.config.js

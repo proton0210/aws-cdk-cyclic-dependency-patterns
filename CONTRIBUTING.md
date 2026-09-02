@@ -212,12 +212,20 @@ When a graph changes:
 Maintainers run:
 
 ```bash
-AWS_PROFILE=dev-academy npm run validate:aws
+npm run validate:aws
+
+# Optional: select a local named profile.
+AWS_PROFILE=my-test-profile npm run validate:aws
 ```
 
-Contributors with a suitable test profile may run the same command. It calls STS
-and CloudFormation `ValidateTemplate`; it must never bootstrap, deploy, update,
-or delete stacks.
+Contributors may use the standard AWS credential provider chain or any suitable
+local test profile. The profile name is caller-owned and must not be hard-coded.
+The command calls STS and CloudFormation `ValidateTemplate`; it must never
+bootstrap, deploy, update, or delete stacks.
+
+Never commit AWS access keys, session tokens, shared credential files, `.env`
+files, account-specific profile names, or copied CLI configuration. Examples
+must use neutral placeholders such as `my-test-profile`.
 
 Do not add deployment commands to automated tests or pull-request workflows.
 

@@ -53,10 +53,9 @@ cannot break this loop.
 ### Reproduce it
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:s3:problem
+npm run synth:s3:problem
 
 aws cloudformation validate-template \
-  --profile dev-academy \
   --template-body \
   file://"$PWD/cdk.out/problems/s3-lambda/Problem-S3LambdaCycle.template.json"
 ```
@@ -118,7 +117,7 @@ to the function.
 ### Validate it
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:s3:solution
+npm run synth:s3:solution
 npm test -- --runTestsByPath test/s3-lambda.test.ts
 ```
 

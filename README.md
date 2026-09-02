@@ -9,7 +9,8 @@ and tests that inspect the synthesized CloudFormation behavior.
 
 The examples accompany the article **Overcoming Cyclic Dependencies in AWS CDK
 with TypeScript**. They were compiled against `aws-cdk-lib` 2.267.0 and
-validated with the `dev-academy` AWS profile without deploying resources.
+validated with an isolated test identity without deploying resources. No AWS
+profile name or credential is stored in this repository.
 
 > A cycle is a graph problem. Fix it by removing, deferring, reversing, or
 > externalizing an edge. `addDependency()` only adds another edge.
@@ -122,15 +123,22 @@ entrypoints create environment-agnostic stacks so CI does not depend on a local
 `cdk.context.json` file. When `--profile` is supplied, the CDK CLI provides the
 selected account and Region at the application boundary.
 
-## Validate with an AWS profile
+## Validate with AWS credentials
 
 ```bash
-AWS_PROFILE=dev-academy npm run validate:aws
+# Use the standard AWS credential provider chain.
+npm run validate:aws
+
+# Or select any locally configured named profile.
+AWS_PROFILE=my-test-profile npm run validate:aws
 ```
+
+`AWS_PROFILE` is optional and is supplied by the caller. The repository never
+provides, persists, or assumes a particular profile.
 
 The script performs the following checks:
 
-1. Calls STS `GetCallerIdentity` to confirm the profile works.
+1. Calls STS `GetCallerIdentity` to confirm the selected credentials work.
 2. Compiles the TypeScript and runs all tests.
 3. Synthesizes every solution stack.
 4. Calls CloudFormation `ValidateTemplate` for each valid template.
@@ -156,8 +164,8 @@ data-retention decision.
 ### S3 and Lambda
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:s3:problem
-AWS_PROFILE=dev-academy npm run synth:s3:solution
+npm run synth:s3:problem
+npm run synth:s3:solution
 ```
 
 The problem synthesizes a template, but CloudFormation validation rejects that
@@ -167,13 +175,13 @@ template. See [the S3/Lambda walkthrough](lib/s3-lambda/).
 
 ```bash
 # Expected CDK synthesis failure.
-AWS_PROFILE=dev-academy npm run synth:sg:problem
+npm run synth:sg:problem
 
 # ComputeStack owns ingress and egress relationship resources.
-AWS_PROFILE=dev-academy npm run synth:sg:solution
+npm run synth:sg:solution
 
 # A downstream ConnectivityStack owns both relationship resources.
-AWS_PROFILE=dev-academy npm run synth:sg:connectivity
+npm run synth:sg:connectivity
 ```
 
 See [the ECS/Aurora walkthrough](lib/security-groups/).
@@ -181,9 +189,9 @@ See [the ECS/Aurora walkthrough](lib/security-groups/).
 ### Export migration
 
 ```bash
-AWS_PROFILE=dev-academy npm run synth:export:strong
-AWS_PROFILE=dev-academy npm run synth:export:both
-AWS_PROFILE=dev-academy npm run synth:export:weak
+npm run synth:export:strong
+npm run synth:export:both
+npm run synth:export:weak
 ```
 
 All three entrypoints use the same CloudFormation stack names so the templates
