@@ -39,7 +39,7 @@
     "validate:aws": "bash scripts/validate-aws.sh"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.267.0",
+    "aws-cdk-lib": "2.271.0",
     "constructs": "10.8.1",
     "source-map-support": "0.5.21"
   },
